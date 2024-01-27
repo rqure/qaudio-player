@@ -7,7 +7,6 @@ import (
 	"time"
 
 	qmq "github.com/rqure/qmq/src"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func main() {
@@ -26,7 +25,8 @@ func main() {
 	signal.Notify(sigint, os.Interrupt)
 
 	ticker := time.NewTicker(time.Duration(tickRateMs) * time.Millisecond)
-  defer ticker.Close()
+	defer ticker.Stop()
+	
 	for {
 		select {
 		case <-sigint:

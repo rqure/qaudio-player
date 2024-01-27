@@ -2,7 +2,10 @@ module github.com/rqure/qclock
 
 go 1.21.6
 
-require github.com/rqure/qmq v1.0.15
+require (
+	github.com/rqure/pulseaudio v0.0.0-20200511091429-8449222912dd
+	github.com/rqure/qmq v1.0.15
+)
 
 require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	qmq "github.com/rqure/qmq/src"
+	pulseaudio "github.com/rqure/pulseaudio"
 )
 
 func main() {

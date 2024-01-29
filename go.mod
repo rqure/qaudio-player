@@ -4,7 +4,7 @@ go 1.21.6
 
 require (
 	github.com/gopxl/beep v1.3.0
-	github.com/rqure/qmq v1.0.15
+	github.com/rqure/qmq v1.0.16
 )
 
 require (

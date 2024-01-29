@@ -29,5 +29,9 @@ jobs:
         git remote set-url origin https://x-access-token:${{ secrets.CI_TOKEN }}@github.com/${{ github.repository }}
         git commit -am "Auto updated submodule references" && git push || echo "No changes to commit"
         
+    - name: Install audio packages
+      run: |
+        apt-get update && apt-get install -y libasound2-dev
+
     - name: Build
       run: go build -v ./...

@@ -52,7 +52,7 @@ func (a *AudioPlayer) PlayAudio(filename string) error {
 		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 		a.initialized = true
 		
-		speaker.Play(beep.Seq(stream, beep.Callback(func() {
+		speaker.Play(beep.Seq(streamer, beep.Callback(func() {
 			done <- true
 		})))
 	} else {

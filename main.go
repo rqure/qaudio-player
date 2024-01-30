@@ -71,10 +71,8 @@ func main() {
 				err := PlayAudio(request.Filename)
 				if err != nil {
 					app.Logger().Error(fmt.Sprintf("Failed to play audio: %v", err))
-					popped.Dispose()
-				} else {
-					popped.Ack()
 				}
+				popped.Ack()
 			}
 		}
 	}

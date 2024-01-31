@@ -13,35 +13,72 @@ import (
 	qmq "github.com/rqure/qmq/src"
 )
 
-func PlayAudio(filename string) error {
+type AudioPlayer struct {
+	oldSampleRate beep.SampleRate
+	initialized bool
+}
+
+func NewAudioPlayer() *AudioPlayer {
+	return &AudioPlayer{
+		initialized: false,
+	}
+}
+
+func (a *AudioPlayer) PlayAudio(filename string) error {
 	f, err := os.Open(filename)
-	defer f.Close()
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	streamer, format, err := mp3.Decode(f)
 	if err != nil {
 		return err
 	}
 	defer streamer.Close()
-
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-	defer speaker.Clear()
-
+	
+	// Total number of samples in the streamer
+	totalSamples := streamer.Len()
+	// Sample rate (number of samples per second)
+	sampleRate := format.SampleRate
+	// Duration in seconds
+	durationSeconds := float64(totalSamples) / float64(sampleRate)
+	// Convert duration to a time.Duration for easy formatting
+	duration := time.Duration(durationSeconds * float64(time.Second))
+	
 	done := make(chan bool)
-	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
-		done <- true
-	})))
 
-	<-done
-	return nil
+	if !a.initialized {
+		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+		a.initialized = true
+		
+		speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+			done <- true
+		})))
+	} else {
+		resampled := beep.Resample(4, format.SampleRate, a.oldSampleRate, streamer)
+		
+		speaker.Play(beep.Seq(resampled, beep.Callback(func() {
+			done <- true
+		})))
+	}
+	
+	a.oldSampleRate = format.SampleRate
+
+	select {
+	case <-done:
+		return nil
+	case <-time.After(duration + (1 * time.Second)):
+		return fmt.Errorf("Timeout occurred")
+	}
 }
 
 func main() {
 	app := qmq.NewQMQApplication("audio-player")
 	app.Initialize()
 	defer app.Deinitialize()
+
+	audioPlayer := NewAudioPlayer()
 
 	app.AddConsumer("audio-player:queue")
 
@@ -68,7 +105,7 @@ func main() {
 			if popped != nil {
 				app.Logger().Advise(fmt.Sprintf("Playing audio file: %s", request.Filename))
 
-				err := PlayAudio(request.Filename)
+				err := audioPlayer.PlayAudio(request.Filename)
 				if err != nil {
 					app.Logger().Error(fmt.Sprintf("Failed to play audio: %v", err))
 				}

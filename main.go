@@ -18,7 +18,7 @@ type AudioPlayer struct {
 }
 
 func NewAudioPlayer() (*AudioPlayer, error) {
-	sampleRate := 44100
+	sampleRate := beep.SampleRate(44100)
 	err := speaker.Init(sampleRate, format.SampleRate.N(time.Second/10))
 	if err != nil {
 		return nil, err

@@ -15,20 +15,13 @@ import (
 
 type AudioPlayer struct {
 	oldSampleRate beep.SampleRate
+	initialized bool
 }
 
-func NewAudioPlayer() (*AudioPlayer, error) {
-	sampleRate := beep.SampleRate(44100)
-	err := speaker.Init(sampleRate, format.SampleRate.N(time.Second/10))
-	if err != nil {
-		return nil, err
-	}
-	
-	<-time.After(1 * time.Second)
-	
+func NewAudioPlayer() *AudioPlayer {
 	return &AudioPlayer{
-		oldSampleRate: sampleRate,
-	}, nil
+		initialized: false,
+	}
 }
 
 func (a *AudioPlayer) PlayAudio(filename string) error {
@@ -54,12 +47,24 @@ func (a *AudioPlayer) PlayAudio(filename string) error {
 	duration := time.Duration(durationSeconds * float64(time.Second))
 	
 	done := make(chan bool)
-	
-	resampled := beep.Resample(4, format.SampleRate, a.oldSampleRate, streamer)
-	
-	speaker.Play(beep.Seq(resampled, beep.Callback(func() {
-		done <- true
-	})))
+
+	if !a.initialized {
+		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+		a.initialized = true
+
+		// Apparently the speaker needs some time to initialize.
+		<-time.After(1 * time.Second)
+		
+		speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+			done <- true
+		})))
+	} else {
+		resampled := beep.Resample(4, format.SampleRate, a.oldSampleRate, streamer)
+		
+		speaker.Play(beep.Seq(resampled, beep.Callback(func() {
+			done <- true
+		})))
+	}
 	
 	a.oldSampleRate = format.SampleRate
 
@@ -76,11 +81,7 @@ func main() {
 	app.Initialize()
 	defer app.Deinitialize()
 
-	audioPlayer, err := NewAudioPlayer()
-	if err != nil {
-		app.Logger().Panic(fmt.Sprintf("Failed to initialize speaker: %v", err))
-		return
-	}
+	audioPlayer := NewAudioPlayer()
 
 	app.AddConsumer("audio-player:queue")
 

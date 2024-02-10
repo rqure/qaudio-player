@@ -51,6 +51,9 @@ func (a *AudioPlayer) PlayAudio(filename string) error {
 	if !a.initialized {
 		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 		a.initialized = true
+
+		// Apparently the speaker needs some time to initialize.
+		<-time.After(1 * time.Second)
 		
 		speaker.Play(beep.Seq(streamer, beep.Callback(func() {
 			done <- true

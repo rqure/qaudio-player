@@ -59,12 +59,17 @@ func main() {
 
 			if popped != nil {
 				app.Logger().Advise(fmt.Sprintf("Playing audio file: %s", request.Filename))
-				popped.Ack()
+
+				go func() {
+					<-time.After(5 * time.Second)
+					popped.Ack()
+				}()
 
 				err := audioPlayer.Play(request.Filename)
 
 				if err != nil {
-					app.Logger().Error(fmt.Sprintf("Failed to play audio: %v", err))
+					app.Logger().Panic(fmt.Sprintf("Failed to play audio: %v", err))
+					os.Exit(1)
 				} else {
 					app.Logger().Advise(fmt.Sprintf("Finished playing audio file %s", request.Filename))
 				}

@@ -15,7 +15,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /qapp
 # Deploy the application binary into a lean image
 FROM alpine:latest AS build-release-stage
 
-RUN apk update && apk add --no-cache alsa-lib pulseaudio alsa-utils alsa-plugins-pulse mpg123
+RUN apk update && apk add --no-cache pulseaudio alsa-utils alsa-plugins-pulse sox
 
 WORKDIR /
 

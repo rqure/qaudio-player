@@ -35,7 +35,7 @@ func main() {
 
 	audioPlayer := NewAudioPlayer()
 
-	app.AddConsumer("audio-player:queue")
+	app.AddConsumer("audio-player:file:queue")
 
 	tickRateMs, err := strconv.Atoi(os.Getenv("TICK_RATE_MS"))
 	if err != nil {
@@ -55,7 +55,7 @@ func main() {
 			return
 		case <-ticker.C:
 			request := &qmq.QMQAudioRequest{}
-			popped := app.Consumer("audio-player:queue").Pop(request)
+			popped := app.Consumer("audio-player:file:queue").Pop(request)
 
 			if popped != nil {
 				app.Logger().Advise(fmt.Sprintf("Playing audio file: %s", request.Filename))

@@ -15,8 +15,8 @@ func main() {
 	defer app.Deinitialize()
 
 	audioPlayer := NewAudioPlayer()
-	app.AddProducer("audio-player:file:exchange").Initialize(10)
 	app.AddConsumer("audio-player:file:queue").Initialize()
+	app.AddConsumer("audio-player:tts:queue").Initialize()
 
 	audioRequestProcessor := NewAudioRequestProcessor(app, audioPlayer)
 	textToSpeechProcessor := NewTextToSpeechProcessor(app, audioPlayer)

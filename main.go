@@ -19,6 +19,7 @@ func main() {
 	app.AddConsumer("audio-player:file:queue").Initialize()
 
 	audioRequestProcessor := NewAudioRequestProcessor(app, audioPlayer)
+	textToSpeechProcessor := NewTextToSpeechProcessor(app, audioPlayer)
 
 	tickRateMs, err := strconv.Atoi(os.Getenv("TICK_RATE_MS"))
 	if err != nil {
@@ -38,6 +39,7 @@ func main() {
 			return
 		case <-ticker.C:
 			audioRequestProcessor.Tick()
+			textToSpeechProcessor.Tick()
 		}
 	}
 }

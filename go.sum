@@ -19,8 +19,8 @@ github.com/hegedustibor/htgo-tts v0.0.0-20230402053941-cd8d1a158135 h1:HWBBhNF2k
 github.com/hegedustibor/htgo-tts v0.0.0-20230402053941-cd8d1a158135/go.mod h1:VBNcur+xWvaQIWCaLH8w7j68zPeqQwVfjREn2S7kYbY=
 github.com/redis/go-redis/v9 v9.4.0 h1:Yzoz33UZw9I/mFhx4MNrB6Fk+XHO1VukNcCa1+lwyKk=
 github.com/redis/go-redis/v9 v9.4.0/go.mod h1:hdY0cQFCN4fnSYT6TkisLufl/4W5UIXyv0b/CLO2V2M=
-github.com/rqure/qmq v1.0.37 h1:JNokyUknOjWce8Wk6RAGLFKMFKtPQUZFrn/cI4c164A=
-github.com/rqure/qmq v1.0.37/go.mod h1:aoGsM7Z20qRs85E61xlyhRmBjfW32fpQUYOinaKOppg=
+github.com/rqure/qmq v1.0.52 h1:IGzp4d/zw6JS7dmdcgJuXoFtQvvLLOymCiZXvpZ/ccg=
+github.com/rqure/qmq v1.0.52/go.mod h1:aoGsM7Z20qRs85E61xlyhRmBjfW32fpQUYOinaKOppg=
 golang.org/x/exp v0.0.0-20190306152737-a1d7652674e8/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/image v0.0.0-20190227222117-0694c2d4d067/go.mod h1:kZ7UVZpmo3dzQBMxlp+ypCbDeSB+sBbTgSJuh5dn5js=
 golang.org/x/mobile v0.0.0-20190415191353-3e0bab5405d6/go.mod h1:E/iHnbuqvinMTCcRqshq8CkpyQDoeVncDDYHnLhea+o=

@@ -4,7 +4,7 @@ go 1.21.6
 
 require (
 	github.com/hegedustibor/htgo-tts v0.0.0-20230402053941-cd8d1a158135
-	github.com/rqure/qmq v1.0.37
+	github.com/rqure/qmq v1.0.52
 )
 
 require (

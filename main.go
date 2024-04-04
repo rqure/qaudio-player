@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
 	"strconv"
 	"time"
@@ -11,31 +9,16 @@ import (
 	qmq "github.com/rqure/qmq/src"
 )
 
-type AudioPlayer struct {
-}
-
-func NewAudioPlayer() *AudioPlayer {
-	return &AudioPlayer{}
-}
-
-func (a *AudioPlayer) Play(filename string) error {
-	cmd := exec.Command("play", filename)
-
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func main() {
 	app := qmq.NewQMQApplication("audio-player")
 	app.Initialize()
 	defer app.Deinitialize()
 
 	audioPlayer := NewAudioPlayer()
+	app.AddProducer("audio-player:file:exchange").Initialize(10)
+	app.AddConsumer("audio-player:file:queue").Initialize()
 
-	app.AddConsumer("audio-player:file:queue")
+	audioRequestProcessor := NewAudioRequestProcessor(app, audioPlayer)
 
 	tickRateMs, err := strconv.Atoi(os.Getenv("TICK_RATE_MS"))
 	if err != nil {
@@ -54,26 +37,7 @@ func main() {
 			app.Logger().Advise("SIGINT received")
 			return
 		case <-ticker.C:
-			request := &qmq.QMQAudioRequest{}
-			popped := app.Consumer("audio-player:file:queue").Pop(request)
-
-			if popped != nil {
-				app.Logger().Advise(fmt.Sprintf("Playing audio file: %s", request.Filename))
-
-				go func() {
-					<-time.After(5 * time.Second)
-					popped.Ack()
-				}()
-
-				err := audioPlayer.Play(request.Filename)
-
-				if err != nil {
-					app.Logger().Panic(fmt.Sprintf("Failed to play audio: %v", err))
-					os.Exit(1)
-				} else {
-					app.Logger().Advise(fmt.Sprintf("Finished playing audio file %s", request.Filename))
-				}
-			}
+			audioRequestProcessor.Tick()
 		}
 	}
 }

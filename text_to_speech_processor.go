@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	htgotts "github.com/hegedustibor/htgo-tts"
-	"github.com/hegedustibor/htgo-tts/voices"
 	qmq "github.com/rqure/qmq/src"
+	qtts "github.com/rqure/qtts"
+	"github.com/rqure/qtts/voices"
 )
 
 type TextToSpeechProcessor struct {
@@ -31,7 +31,7 @@ func (t *TextToSpeechProcessor) Tick() {
 	t.app.Logger().Advise(fmt.Sprintf("Playing text-to-speech: %s", request.Text))
 	popped.Ack()
 
-	speech := htgotts.Speech{
+	speech := qtts.Speech{
 		Folder:   "audio",
 		Language: voices.English,
 		Handler:  t.audioPlayer}

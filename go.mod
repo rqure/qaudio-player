@@ -3,8 +3,9 @@ module github.com/rqure/qaudio-player
 go 1.21.6
 
 require (
-	github.com/rqure/qmq v1.0.52
-	github.com/rqure/qtts v1.0.0
+	github.com/rqure/qmq v1.1.6
+	github.com/rqure/qtts v1.0.2
+	google.golang.org/protobuf v1.32.0
 )
 
 require (
@@ -13,5 +14,4 @@ require (
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/redis/go-redis/v9 v9.4.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
 )

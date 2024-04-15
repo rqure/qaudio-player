@@ -5,7 +5,7 @@ import qmq "github.com/rqure/qmq/src"
 type NameProvider struct{}
 
 func (np *NameProvider) Get() string {
-	return "clock"
+	return "audio-player"
 }
 
 type TransformerProviderFactory struct{}

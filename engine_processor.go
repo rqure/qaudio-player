@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	qmq "github.com/rqure/qmq/src"
 	"github.com/rqure/qtts"
@@ -29,6 +30,8 @@ func NewEngineProcessor(audioPlayer AudioPlayer) qmq.EngineProcessor {
 func (e *EngineProcessor) Process(cp qmq.EngineComponentProvider) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	ticker := time.NewTicker(10 * time.Minute)
 
 	for {
 		select {
@@ -58,6 +61,11 @@ func (e *EngineProcessor) Process(cp qmq.EngineComponentProvider) {
 			} else {
 				cp.WithLogger().Advise(fmt.Sprintf("Finished playing text-to-speech: '%s'", r.Text))
 			}
+		case <-ticker.C:
+			cp.WithLogger().Debug("Playing keepalive audio to bluetooth speaker")
+			cp.WithProducer("audio-player:tts:queue").Push(&qmq.TextToSpeechRequest{
+				Text: os.Getenv("BLUETOOTH_SPEAKER_KEEPALIVE_TTS") + " ",
+			})
 		}
 	}
 }

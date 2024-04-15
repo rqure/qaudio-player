@@ -12,11 +12,11 @@ type TransformerProviderFactory struct{}
 
 func (t *TransformerProviderFactory) Create(components qmq.EngineComponentProvider) qmq.TransformerProvider {
 	transformerProvider := qmq.NewDefaultTransformerProvider()
-	transformerProvider.Set("consumer:audio-player:file:exchange", []qmq.Transformer{
+	transformerProvider.Set("consumer:audio-player:file:queue", []qmq.Transformer{
 		qmq.NewMessageToAnyTransformer(components.WithLogger()),
 		NewAnyToAudioTransformer(components.WithLogger()),
 	})
-	transformerProvider.Set("consumer:audio-player:tts:exchange", []qmq.Transformer{
+	transformerProvider.Set("consumer:audio-player:tts:queue", []qmq.Transformer{
 		qmq.NewMessageToAnyTransformer(components.WithLogger()),
 		NewAnyToTtsTransformer(components.WithLogger()),
 	})

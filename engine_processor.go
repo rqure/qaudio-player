@@ -14,13 +14,13 @@ import (
 
 type EngineProcessor struct {
 	AudioPlayer AudioPlayer
-	Tts         qtts.Speech
+	Tts         *qtts.Speech
 }
 
 func NewEngineProcessor(audioPlayer AudioPlayer) qmq.EngineProcessor {
 	return &EngineProcessor{
 		AudioPlayer: audioPlayer,
-		Tts: qtts.Speech{
+		Tts: &qtts.Speech{
 			Folder:   "/",
 			Language: voices.English,
 			Handler:  audioPlayer},

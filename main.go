@@ -31,7 +31,7 @@ func main() {
 	engine := qmq.NewDefaultEngine(qmq.DefaultEngineConfig{
 		NameProvider:               &NameProvider{},
 		TransformerProviderFactory: &TransformerProviderFactory{},
-		EngineProcessor:            &EngineProcessor{},
+		EngineProcessor:            NewEngineProcessor(NewAudioPlayer()),
 	})
 	engine.Run()
 }

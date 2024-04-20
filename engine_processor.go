@@ -21,7 +21,7 @@ func NewEngineProcessor(audioPlayer AudioPlayer) qmq.EngineProcessor {
 	return &EngineProcessor{
 		AudioPlayer: audioPlayer,
 		Tts: qtts.Speech{
-			Folder:   "",
+			Folder:   "/",
 			Language: voices.English,
 			Handler:  audioPlayer},
 	}

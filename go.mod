@@ -4,7 +4,7 @@ go 1.21.6
 
 require (
 	github.com/rqure/qmq v1.1.11
-	github.com/rqure/qtts v1.0.2
+	github.com/rqure/qtts v1.0.3
 	google.golang.org/protobuf v1.32.0
 )
 

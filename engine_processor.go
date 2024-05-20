@@ -37,7 +37,7 @@ func (e *EngineProcessor) Process(cp qmq.EngineComponentProvider) {
 		select {
 		case <-quit:
 			return
-		case c := <-cp.WithConsumer("audio-player:file:queue").Pop():
+		case c := <-cp.WithConsumer("audio-player:cmd:play-file").Pop():
 			c.Ack()
 			r := c.Data().(*qmq.AudioRequest)
 
@@ -49,7 +49,7 @@ func (e *EngineProcessor) Process(cp qmq.EngineComponentProvider) {
 			} else {
 				cp.WithLogger().Advise(fmt.Sprintf("Finished playing audio file: %s", r.Filename))
 			}
-		case c := <-cp.WithConsumer("audio-player:tts:queue").Pop():
+		case c := <-cp.WithConsumer("audio-player:cmd:play-tts").Pop():
 			c.Ack()
 			r := c.Data().(*qmq.TextToSpeechRequest)
 
@@ -63,7 +63,7 @@ func (e *EngineProcessor) Process(cp qmq.EngineComponentProvider) {
 			}
 		case <-ticker.C:
 			cp.WithLogger().Debug("Playing keepalive audio to bluetooth speaker")
-			cp.WithProducer("audio-player:tts:queue").Push(&qmq.TextToSpeechRequest{
+			cp.WithProducer("audio-player:cmd:play-tts").Push(&qmq.TextToSpeechRequest{
 				Text: os.Getenv("BLUETOOTH_SPEAKER_KEEPALIVE_TTS") + " ",
 			})
 		}

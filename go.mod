@@ -3,7 +3,7 @@ module github.com/rqure/qaudio-player
 go 1.21.6
 
 require (
-	github.com/rqure/qmq v1.1.18
+	github.com/rqure/qmq v1.1.19
 	github.com/rqure/qtts v1.0.3
 	google.golang.org/protobuf v1.32.0
 )

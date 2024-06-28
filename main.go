@@ -22,14 +22,23 @@ func main() {
 
 	dbWorker := qdb.NewDatabaseWorker(db)
 	leaderElectionWorker := qdb.NewLeaderElectionWorker(db)
-	// clockWorker := NewClockWorker(db, 1*time.Second)
+	audioFileRequestHandler := NewAudioFileRequestHandler(db)
+	textToSpeechRequestHandler := NewTextToSpeechRequestHandler(db)
+	audioPlayerWorker := NewAudioPlayerWorker()
 
 	dbWorker.Signals.Connected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseConnected))
 	dbWorker.Signals.Disconnected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseDisconnected))
 
-	// leaderElectionWorker.Signals.BecameLeader.Connect(qdb.Slot(clockWorker.OnBecameLeader))
-	// leaderElectionWorker.Signals.BecameFollower.Connect(qdb.Slot(clockWorker.OnLostLeadership))
-	// leaderElectionWorker.Signals.BecameUnavailable.Connect(qdb.Slot(clockWorker.OnLostLeadership))
+	leaderElectionWorker.Signals.BecameLeader.Connect(qdb.Slot(audioFileRequestHandler.OnBecameLeader))
+	leaderElectionWorker.Signals.BecameFollower.Connect(qdb.Slot(audioFileRequestHandler.OnLostLeadership))
+	leaderElectionWorker.Signals.BecameUnavailable.Connect(qdb.Slot(audioFileRequestHandler.OnLostLeadership))
+
+	leaderElectionWorker.Signals.BecameLeader.Connect(qdb.Slot(textToSpeechRequestHandler.OnBecameLeader))
+	leaderElectionWorker.Signals.BecameFollower.Connect(qdb.Slot(textToSpeechRequestHandler.OnLostLeadership))
+	leaderElectionWorker.Signals.BecameUnavailable.Connect(qdb.Slot(textToSpeechRequestHandler.OnLostLeadership))
+
+	audioFileRequestHandler.Signals.NewRequest.Connect(qdb.SlotWithArgs(audioPlayerWorker.OnAddAudioFileToQueue))
+	textToSpeechRequestHandler.Signals.NewRequest.Connect(qdb.SlotWithArgs(audioPlayerWorker.OnAddTtsToQueue))
 
 	// Create a new application configuration
 	config := qdb.ApplicationConfig{
@@ -37,7 +46,9 @@ func main() {
 		Workers: []qdb.IWorker{
 			dbWorker,
 			leaderElectionWorker,
-			// clockWorker,
+			audioPlayerWorker,
+			audioFileRequestHandler,
+			textToSpeechRequestHandler,
 		},
 	}
 

@@ -8,7 +8,7 @@ import (
 )
 
 type IAudioPlayer interface {
-	Play(filename string)
+	Play(filename string) error
 	IsPlaying() bool
 	Cancel()
 }
@@ -23,7 +23,7 @@ func NewAudioPlayer() IAudioPlayer {
 	}
 }
 
-func (a *AudioPlayer) Play(filename string) {
+func (a *AudioPlayer) Play(filename string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	a.cancel = cancel
 
@@ -36,6 +36,8 @@ func (a *AudioPlayer) Play(filename string) {
 
 		a.cancel = nil
 	}()
+
+	return nil
 }
 
 func (a *AudioPlayer) IsPlaying() bool {

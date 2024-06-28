@@ -1,42 +1,49 @@
 package main
 
-import qmq "github.com/rqure/qmq/src"
+import (
+	"os"
 
-type NameProvider struct{}
+	qdb "github.com/rqure/qdb/src"
+)
 
-func (np *NameProvider) Get() string {
-	return "audio-player"
-}
+func getDatabaseAddress() string {
+	addr := os.Getenv("QDB_ADDR")
+	if addr == "" {
+		addr = "redis:6379"
+	}
 
-type TransformerProviderFactory struct{}
-
-func (t *TransformerProviderFactory) Create(components qmq.EngineComponentProvider) qmq.TransformerProvider {
-	transformerProvider := qmq.NewDefaultTransformerProvider()
-	transformerProvider.Set("consumer:audio-player:cmd:play-file", []qmq.Transformer{
-		qmq.NewTracePopTransformer(components.WithLogger()),
-		qmq.NewMessageToAnyTransformer(components.WithLogger()),
-		NewAnyToAudioTransformer(components.WithLogger()),
-	})
-	transformerProvider.Set("consumer:audio-player:cmd:play-tts", []qmq.Transformer{
-		qmq.NewTracePopTransformer(components.WithLogger()),
-		qmq.NewMessageToAnyTransformer(components.WithLogger()),
-		NewAnyToTtsTransformer(components.WithLogger()),
-	})
-	transformerProvider.Set("producer:audio-player:cmd:play-tts", []qmq.Transformer{
-		qmq.NewProtoToAnyTransformer(components.WithLogger()),
-		qmq.NewAnyToMessageTransformer(components.WithLogger(), qmq.AnyToMessageTransformerConfig{
-			SourceProvider: components.WithNameProvider(),
-		}),
-		qmq.NewTracePushTransformer(components.WithLogger()),
-	})
-	return transformerProvider
+	return addr
 }
 
 func main() {
-	engine := qmq.NewDefaultEngine(qmq.DefaultEngineConfig{
-		NameProvider:               &NameProvider{},
-		TransformerProviderFactory: &TransformerProviderFactory{},
-		EngineProcessor:            NewEngineProcessor(NewAudioPlayer()),
+	db := qdb.NewRedisDatabase(qdb.RedisDatabaseConfig{
+		Address: getDatabaseAddress(),
 	})
-	engine.Run()
+
+	dbWorker := qdb.NewDatabaseWorker(db)
+	leaderElectionWorker := qdb.NewLeaderElectionWorker(db)
+	// clockWorker := NewClockWorker(db, 1*time.Second)
+
+	dbWorker.Signals.Connected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseConnected))
+	dbWorker.Signals.Disconnected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseDisconnected))
+
+	// leaderElectionWorker.Signals.BecameLeader.Connect(qdb.Slot(clockWorker.OnBecameLeader))
+	// leaderElectionWorker.Signals.BecameFollower.Connect(qdb.Slot(clockWorker.OnLostLeadership))
+	// leaderElectionWorker.Signals.BecameUnavailable.Connect(qdb.Slot(clockWorker.OnLostLeadership))
+
+	// Create a new application configuration
+	config := qdb.ApplicationConfig{
+		Name: "audio-player",
+		Workers: []qdb.IWorker{
+			dbWorker,
+			leaderElectionWorker,
+			// clockWorker,
+		},
+	}
+
+	// Create a new application
+	app := qdb.NewApplication(config)
+
+	// Execute the application
+	app.Execute()
 }

@@ -4,9 +4,7 @@ go 1.21.6
 
 require (
 	github.com/rqure/qdb v1.2.35
-	github.com/rqure/qmq v1.1.22
 	github.com/rqure/qtts v1.0.3
-	google.golang.org/protobuf v1.32.0
 )
 
 require (
@@ -17,4 +15,5 @@ require (
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/redis/go-redis/v9 v9.4.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 )

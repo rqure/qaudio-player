@@ -93,7 +93,7 @@ func (w *AudioFileRequestHandler) ProcessNotification(notification *qdb.Database
 			}
 
 			switch content := fileContent.(type) {
-			case *qdb.String:
+			case *qdb.BinaryFile:
 				w.Signals.NewRequest.Emit(content.Raw)
 			default:
 				qdb.Error("[AudioFileRequestHandler::ProcessNotification] Unknown audio file content type: %T", fileContent)

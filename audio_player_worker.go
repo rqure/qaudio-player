@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"os"
 
 	"github.com/gammazero/deque"
@@ -57,9 +56,9 @@ func (w *AudioPlayerWorker) DoWork() {
 
 	if w.audioFileQueue.Len() > 0 {
 		content := w.audioFileQueue.PopFront()
-		decoded, err := base64.StdEncoding.DecodeString(content)
-		if err != nil {
-			qdb.Error("[AudioFileRequestHandler::ProcessNotification] Failed to decode audio file content: %s", err)
+		decoded := qdb.FileDecode(content)
+
+		if len(decoded) == 0 {
 			return
 		}
 

@@ -62,6 +62,8 @@ func (w *AudioFileRequestHandler) ProcessNotification(notification *qdb.Database
 		return
 	}
 
+	qdb.Info("[AudioFileRequestHandler::ProcessNotification] Received audio file request: %v", notification)
+
 	if len(notification.Context) == 0 {
 		w.Signals.NewRequest.Emit("")
 		return

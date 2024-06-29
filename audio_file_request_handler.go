@@ -80,7 +80,7 @@ func (w *AudioFileRequestHandler) ProcessNotification(notification *qdb.Database
 
 			switch description := descriptionField.(type) {
 			case *qdb.String:
-				qdb.Info("[AudioFileRequestHandler::ProcessNotification] Playing audio file: %s", description.Raw)
+				qdb.Info("[AudioFileRequestHandler::ProcessNotification] Adding request to play audio file: %s", description.Raw)
 			default:
 				qdb.Error("[AudioFileRequestHandler::ProcessNotification] Unknown audio file description type: %T", descriptionField)
 				return

@@ -23,22 +23,26 @@ func NewAudioFileRequestHandler(db qdb.IDatabase) *AudioFileRequestHandler {
 }
 
 func (w *AudioFileRequestHandler) OnBecameLeader() {
-	w.subscriptionIds = []string{}
-
 	w.isLeader = true
 
-	w.db.Notify(&qdb.DatabaseNotificationConfig{
+	w.subscriptionIds = append(w.subscriptionIds, w.db.Notify(&qdb.DatabaseNotificationConfig{
 		Type:  "AudioController",
 		Field: "AudioFile",
 		ContextFields: []string{
 			"AudioFile->Description",
 			"AudioFile->Content",
 		},
-	}, w.ProcessNotification)
+	}, w.ProcessNotification))
 }
 
 func (w *AudioFileRequestHandler) OnLostLeadership() {
 	w.isLeader = false
+
+	for _, id := range w.subscriptionIds {
+		w.db.Unnotify(id)
+	}
+
+	w.subscriptionIds = []string{}
 }
 
 func (w *AudioFileRequestHandler) Init() {

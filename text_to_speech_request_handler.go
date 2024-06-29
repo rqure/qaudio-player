@@ -25,14 +25,19 @@ func NewTextToSpeechRequestHandler(db qdb.IDatabase) *TextToSpeechRequestHandler
 func (w *TextToSpeechRequestHandler) OnBecameLeader() {
 	w.isLeader = true
 
-	w.db.Notify(&qdb.DatabaseNotificationConfig{
+	w.subscriptionIds = append(w.subscriptionIds, w.db.Notify(&qdb.DatabaseNotificationConfig{
 		Type:  "AudioController",
 		Field: "TextToSpeech",
-	}, w.ProcessNotification)
+	}, w.ProcessNotification))
 }
 
 func (w *TextToSpeechRequestHandler) OnLostLeadership() {
 	w.isLeader = false
+
+	for _, id := range w.subscriptionIds {
+		w.db.Unnotify(id)
+	}
+
 	w.subscriptionIds = []string{}
 }
 

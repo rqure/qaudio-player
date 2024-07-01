@@ -28,11 +28,14 @@ func main() {
 	schemaValidator := qdb.NewSchemaValidator(db)
 
 	schemaValidator.AddEntity("Root", "SchemaUpdateTrigger")
+	schemaValidator.AddEntity("AudioController", "AudioFile", "TextToSpeech")
+	schemaValidator.AddEntity("MP3File", "Content", "Description")
 
 	dbWorker.Signals.SchemaUpdated.Connect(qdb.Slot(schemaValidator.OnSchemaUpdated))
 	leaderElectionWorker.AddAvailabilityCriteria(func() bool {
 		return schemaValidator.IsValid()
 	})
+
 	dbWorker.Signals.Connected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseConnected))
 	dbWorker.Signals.Disconnected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseDisconnected))
 

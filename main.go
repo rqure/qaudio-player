@@ -25,7 +25,14 @@ func main() {
 	audioFileRequestHandler := NewAudioFileRequestHandler(db)
 	textToSpeechRequestHandler := NewTextToSpeechRequestHandler(db)
 	audioPlayerWorker := NewAudioPlayerWorker()
+	schemaValidator := qdb.NewSchemaValidator(db)
 
+	schemaValidator.AddEntity("Root", "SchemaUpdateTrigger")
+
+	dbWorker.Signals.SchemaUpdated.Connect(qdb.Slot(schemaValidator.OnSchemaUpdated))
+	leaderElectionWorker.AddAvailabilityCriteria(func() bool {
+		return schemaValidator.IsValid()
+	})
 	dbWorker.Signals.Connected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseConnected))
 	dbWorker.Signals.Disconnected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseDisconnected))
 

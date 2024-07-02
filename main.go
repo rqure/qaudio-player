@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	qdb "github.com/rqure/qdb/src"
 )
@@ -24,6 +25,7 @@ func main() {
 	leaderElectionWorker := qdb.NewLeaderElectionWorker(db)
 	audioFileRequestHandler := NewAudioFileRequestHandler(db)
 	textToSpeechRequestHandler := NewTextToSpeechRequestHandler(db)
+	bluetoothHeartbeatWorker := NewBluetoothHeartbeatWorker(10 * time.Minute)
 	audioPlayerWorker := NewAudioPlayerWorker()
 	schemaValidator := qdb.NewSchemaValidator(db)
 
@@ -49,6 +51,7 @@ func main() {
 
 	audioFileRequestHandler.Signals.NewRequest.Connect(qdb.SlotWithArgs(audioPlayerWorker.OnAddAudioFileToQueue))
 	textToSpeechRequestHandler.Signals.NewRequest.Connect(qdb.SlotWithArgs(audioPlayerWorker.OnAddTtsToQueue))
+	bluetoothHeartbeatWorker.Signals.Heartbeat.Connect(qdb.SlotWithArgs(audioPlayerWorker.OnAddTtsToQueue))
 
 	// Create a new application configuration
 	config := qdb.ApplicationConfig{

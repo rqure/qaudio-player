@@ -62,6 +62,7 @@ func main() {
 			audioPlayerWorker,
 			audioFileRequestHandler,
 			textToSpeechRequestHandler,
+			bluetoothHeartbeatWorker,
 		},
 	}
 

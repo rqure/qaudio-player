@@ -9,9 +9,9 @@ type AudioFileRequestHandlerSignals struct {
 }
 
 type AudioFileRequestHandler struct {
-	db              qdb.IDatabase
-	isLeader        bool
-	subscriptionIds []string
+	db                 qdb.IDatabase
+	isLeader           bool
+	notificationTokens []qdb.INotificationToken
 
 	Signals AudioFileRequestHandlerSignals
 }
@@ -25,24 +25,24 @@ func NewAudioFileRequestHandler(db qdb.IDatabase) *AudioFileRequestHandler {
 func (w *AudioFileRequestHandler) OnBecameLeader() {
 	w.isLeader = true
 
-	w.subscriptionIds = append(w.subscriptionIds, w.db.Notify(&qdb.DatabaseNotificationConfig{
+	w.notificationTokens = append(w.notificationTokens, w.db.Notify(&qdb.DatabaseNotificationConfig{
 		Type:  "AudioController",
 		Field: "AudioFile",
 		ContextFields: []string{
 			"AudioFile->Description",
 			"AudioFile->Content",
 		},
-	}, w.ProcessNotification))
+	}, qdb.NewNotificationCallback(w.ProcessNotification)))
 }
 
 func (w *AudioFileRequestHandler) OnLostLeadership() {
 	w.isLeader = false
 
-	for _, id := range w.subscriptionIds {
-		w.db.Unnotify(id)
+	for _, token := range w.notificationTokens {
+		token.Unbind()
 	}
 
-	w.subscriptionIds = []string{}
+	w.notificationTokens = []qdb.INotificationToken{}
 }
 
 func (w *AudioFileRequestHandler) Init() {

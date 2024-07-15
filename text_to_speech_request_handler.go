@@ -9,9 +9,9 @@ type TextToSpeechRequestHandlerSignals struct {
 }
 
 type TextToSpeechRequestHandler struct {
-	db              qdb.IDatabase
-	isLeader        bool
-	subscriptionIds []string
+	db                 qdb.IDatabase
+	isLeader           bool
+	notificationTokens []qdb.INotificationToken
 
 	Signals TextToSpeechRequestHandlerSignals
 }
@@ -25,20 +25,20 @@ func NewTextToSpeechRequestHandler(db qdb.IDatabase) *TextToSpeechRequestHandler
 func (w *TextToSpeechRequestHandler) OnBecameLeader() {
 	w.isLeader = true
 
-	w.subscriptionIds = append(w.subscriptionIds, w.db.Notify(&qdb.DatabaseNotificationConfig{
+	w.notificationTokens = append(w.notificationTokens, w.db.Notify(&qdb.DatabaseNotificationConfig{
 		Type:  "AudioController",
 		Field: "TextToSpeech",
-	}, w.ProcessNotification))
+	}, qdb.NewNotificationCallback(w.ProcessNotification)))
 }
 
 func (w *TextToSpeechRequestHandler) OnLostLeadership() {
 	w.isLeader = false
 
-	for _, id := range w.subscriptionIds {
-		w.db.Unnotify(id)
+	for _, token := range w.notificationTokens {
+		token.Unbind()
 	}
 
-	w.subscriptionIds = []string{}
+	w.notificationTokens = []qdb.INotificationToken{}
 }
 
 func (w *TextToSpeechRequestHandler) Init() {

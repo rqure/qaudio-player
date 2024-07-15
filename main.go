@@ -42,12 +42,10 @@ func main() {
 	dbWorker.Signals.Disconnected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseDisconnected))
 
 	leaderElectionWorker.Signals.BecameLeader.Connect(qdb.Slot(audioFileRequestHandler.OnBecameLeader))
-	leaderElectionWorker.Signals.BecameFollower.Connect(qdb.Slot(audioFileRequestHandler.OnLostLeadership))
-	leaderElectionWorker.Signals.BecameUnavailable.Connect(qdb.Slot(audioFileRequestHandler.OnLostLeadership))
+	leaderElectionWorker.Signals.LosingLeadership.Connect(qdb.Slot(audioFileRequestHandler.OnLostLeadership))
 
 	leaderElectionWorker.Signals.BecameLeader.Connect(qdb.Slot(textToSpeechRequestHandler.OnBecameLeader))
-	leaderElectionWorker.Signals.BecameFollower.Connect(qdb.Slot(textToSpeechRequestHandler.OnLostLeadership))
-	leaderElectionWorker.Signals.BecameUnavailable.Connect(qdb.Slot(textToSpeechRequestHandler.OnLostLeadership))
+	leaderElectionWorker.Signals.LosingLeadership.Connect(qdb.Slot(textToSpeechRequestHandler.OnLostLeadership))
 
 	audioFileRequestHandler.Signals.NewRequest.Connect(qdb.SlotWithArgs(audioPlayerWorker.OnAddAudioFileToQueue))
 	textToSpeechRequestHandler.Signals.NewRequest.Connect(qdb.SlotWithArgs(audioPlayerWorker.OnAddTtsToQueue))

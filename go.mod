@@ -4,7 +4,7 @@ go 1.21.6
 
 require (
 	github.com/gammazero/deque v0.2.1
-	github.com/rqure/qdb v1.2.45
+	github.com/rqure/qdb v1.2.57
 	github.com/rqure/qtts v1.0.3
 )
 

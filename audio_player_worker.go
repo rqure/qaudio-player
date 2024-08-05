@@ -50,7 +50,12 @@ func (w *AudioPlayerWorker) DoWork() {
 	if w.ttsQueue.Len() > 0 {
 		content := w.ttsQueue.PopFront()
 		w.audioPlayer.Cancel()
-		w.tts.Speak(content)
+
+		err := w.tts.Speak(content)
+		if err != nil {
+			qdb.Error("[AudioPlayerWorker::DoWork] Error while playing TTS %v", err)
+		}
+
 		return
 	}
 
@@ -64,7 +69,12 @@ func (w *AudioPlayerWorker) DoWork() {
 
 		os.WriteFile("temp.mp3", decoded, 0644)
 		w.audioPlayer.Cancel()
-		w.audioPlayer.Play("temp.mp3")
+
+		err := w.audioPlayer.Play("temp.mp3")
+		if err != nil {
+			qdb.Error("[AudioPlayerWorker::DoWork] Error while playing AudioFile %v", err)
+		}
+
 		return
 	}
 }

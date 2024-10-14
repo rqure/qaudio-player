@@ -1,6 +1,6 @@
 module github.com/rqure/qaudio-player
 
-go 1.21.6
+go 1.22
 
 require (
 	github.com/gammazero/deque v0.2.1

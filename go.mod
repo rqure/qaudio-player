@@ -3,8 +3,8 @@ module github.com/rqure/qaudio-player
 go 1.22
 
 require (
-	github.com/gammazero/deque v0.2.1
-	github.com/rqure/qdb v1.2.84
+	github.com/gammazero/deque v1.0.0
+	github.com/rqure/qdb v1.2.85
 	github.com/rqure/qtts v1.0.3
 )
 
@@ -15,5 +15,5 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/redis/go-redis/v9 v9.7.0 // indirect
-	google.golang.org/protobuf v1.35.1 // indirect
+	google.golang.org/protobuf v1.35.2 // indirect
 )

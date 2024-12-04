@@ -20,8 +20,8 @@ type AudioPlayerWorker struct {
 func NewAudioPlayerWorker() *AudioPlayerWorker {
 	audioPlayer := NewAudioPlayer()
 	return &AudioPlayerWorker{
-		audioFileQueue: deque.New[string](),
-		ttsQueue:       deque.New[string](),
+		audioFileQueue: new(deque.Deque[string]),
+		ttsQueue:       new(deque.Deque[string]),
 		audioPlayer:    audioPlayer,
 		tts: &qtts.Speech{
 			Folder:   "/",

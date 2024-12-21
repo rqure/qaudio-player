@@ -31,9 +31,7 @@ func (w *TextToSpeechRequestHandler) OnBecameLeader(ctx context.Context) {
 		notification.NewConfig().
 			SetEntityType("AudioController").
 			SetFieldName("TextToSpeech").
-			SetContextFields([]string{
-				"TtsLanguage",
-			}),
+			SetContextFields("TtsLanguage"),
 		notification.NewCallback(w.ProcessNotification)))
 }
 

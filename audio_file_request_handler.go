@@ -32,10 +32,9 @@ func (w *AudioFileRequestHandler) OnBecameLeader(ctx context.Context) {
 		notification.NewConfig().
 			SetEntityType("AudioController").
 			SetFieldName("AudioFile").
-			SetContextFields([]string{
+			SetContextFields(
 				"AudioFile->Description",
 				"AudioFile->Content",
-			},
 			),
 		notification.NewCallback(w.ProcessNotification),
 	))

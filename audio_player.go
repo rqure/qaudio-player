@@ -4,7 +4,7 @@ import (
 	"context"
 	"os/exec"
 
-	qdb "github.com/rqure/qdb/src"
+	"github.com/rqure/qlib/pkg/log"
 )
 
 type IAudioPlayer interface {
@@ -31,7 +31,7 @@ func (a *AudioPlayer) Play(filename string) error {
 
 	go func() {
 		if err := cmd.Run(); err != nil {
-			qdb.Error("[AudioPlayer::Play] Failed to play audio")
+			log.Error("Failed to play audio")
 		}
 
 		a.cancel = nil

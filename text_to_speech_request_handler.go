@@ -1,72 +1,70 @@
 package main
 
 import (
-	qdb "github.com/rqure/qdb/src"
+	"context"
+
+	"github.com/rqure/qlib/pkg/app"
+	"github.com/rqure/qlib/pkg/data"
+	"github.com/rqure/qlib/pkg/data/notification"
+	"github.com/rqure/qlib/pkg/signalslots"
 )
 
-type TextToSpeechRequestHandlerSignals struct {
-	NewRequest qdb.Signal
-}
-
 type TextToSpeechRequestHandler struct {
-	db                 qdb.IDatabase
+	store              data.Store
 	isLeader           bool
-	notificationTokens []qdb.INotificationToken
+	notificationTokens []data.NotificationToken
 
-	Signals TextToSpeechRequestHandlerSignals
+	NewRequest signalslots.Signal
 }
 
-func NewTextToSpeechRequestHandler(db qdb.IDatabase) *TextToSpeechRequestHandler {
+func NewTextToSpeechRequestHandler(store data.Store) *TextToSpeechRequestHandler {
 	return &TextToSpeechRequestHandler{
-		db: db,
+		store: store,
 	}
 }
 
-func (w *TextToSpeechRequestHandler) OnBecameLeader() {
+func (w *TextToSpeechRequestHandler) OnBecameLeader(ctx context.Context) {
 	w.isLeader = true
 
-	w.notificationTokens = append(w.notificationTokens, w.db.Notify(&qdb.DatabaseNotificationConfig{
-		Type:  "AudioController",
-		Field: "TextToSpeech",
-	}, qdb.NewNotificationCallback(w.ProcessNotification)))
+	w.notificationTokens = append(w.notificationTokens, w.store.Notify(
+		ctx,
+		notification.NewConfig().
+			SetEntityType("AudioController").
+			SetFieldName("TextToSpeech").
+			SetContextFields([]string{
+				"TtsLanguage",
+			}),
+		notification.NewCallback(w.ProcessNotification)))
 }
 
-func (w *TextToSpeechRequestHandler) OnLostLeadership() {
+func (w *TextToSpeechRequestHandler) OnLostLeadership(ctx context.Context) {
 	w.isLeader = false
 
 	for _, token := range w.notificationTokens {
-		token.Unbind()
+		token.Unbind(ctx)
 	}
 
-	w.notificationTokens = []qdb.INotificationToken{}
+	w.notificationTokens = []data.NotificationToken{}
 }
 
-func (w *TextToSpeechRequestHandler) Init() {
-
-}
-
-func (w *TextToSpeechRequestHandler) Deinit() {
+func (w *TextToSpeechRequestHandler) Init(context.Context, app.Handle) {
 
 }
 
-func (w *TextToSpeechRequestHandler) DoWork() {
+func (w *TextToSpeechRequestHandler) Deinit(context.Context) {
 
 }
 
-func (w *TextToSpeechRequestHandler) ProcessNotification(notification *qdb.DatabaseNotification) {
+func (w *TextToSpeechRequestHandler) DoWork(context.Context) {
+
+}
+
+func (w *TextToSpeechRequestHandler) ProcessNotification(ctx context.Context, n data.Notification) {
 	if !w.isLeader {
 		return
 	}
 
-	textToSpeechField, err := notification.Current.Value.UnmarshalNew()
-	if err != nil {
-		qdb.Error("[TextToSpeechRequestHandler::ProcessNotification] Failed to unmarshal text to speech field: %v", err)
-		return
-	}
-
-	switch textToSpeech := textToSpeechField.(type) {
-	case *qdb.String:
-		qdb.Info("[TextToSpeechRequestHandler::ProcessNotification] Adding request to play text to speech: %s", textToSpeech.Raw)
-		w.Signals.NewRequest.Emit(textToSpeech.Raw)
-	}
+	text := n.GetCurrent().GetValue().GetString()
+	lang := n.GetContext(0).GetValue().GetString()
+	w.NewRequest.Emit(ctx, text, lang)
 }

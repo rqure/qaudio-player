@@ -4,70 +4,56 @@ import (
 	"os"
 	"time"
 
-	qdb "github.com/rqure/qdb/src"
+	"github.com/rqure/qlib/pkg/app"
+	"github.com/rqure/qlib/pkg/app/workers"
+	"github.com/rqure/qlib/pkg/data/store"
 )
 
 func getDatabaseAddress() string {
-	addr := os.Getenv("QDB_ADDR")
+	addr := os.Getenv("Q_ADDR")
 	if addr == "" {
-		addr = "redis:6379"
+		addr = "ws://webgateway:20000/ws"
 	}
 
 	return addr
 }
 
 func main() {
-	db := qdb.NewRedisDatabase(qdb.RedisDatabaseConfig{
+	s := store.NewWeb(store.WebConfig{
 		Address: getDatabaseAddress(),
 	})
 
-	dbWorker := qdb.NewDatabaseWorker(db)
-	leaderElectionWorker := qdb.NewLeaderElectionWorker(db)
-	audioFileRequestHandler := NewAudioFileRequestHandler(db)
-	textToSpeechRequestHandler := NewTextToSpeechRequestHandler(db)
+	storeWorker := workers.NewStore(s)
+	leadershipWorker := workers.NewLeadership(s)
+	audioFileRequestHandler := NewAudioFileRequestHandler(s)
+	textToSpeechRequestHandler := NewTextToSpeechRequestHandler(s)
 	bluetoothHeartbeatWorker := NewBluetoothHeartbeatWorker(10 * time.Minute)
 	audioPlayerWorker := NewAudioPlayerWorker()
-	schemaValidator := qdb.NewSchemaValidator(db)
+	schemaValidator := leadershipWorker.GetEntityFieldValidator()
 
-	schemaValidator.AddEntity("Root", "SchemaUpdateTrigger")
-	schemaValidator.AddEntity("AudioController", "AudioFile", "TextToSpeech")
-	schemaValidator.AddEntity("MP3File", "Content", "Description")
+	schemaValidator.RegisterEntityFields("Root", "SchemaUpdateTrigger")
+	schemaValidator.RegisterEntityFields("AudioController", "AudioFile", "TextToSpeech", "TtsLanguage")
+	schemaValidator.RegisterEntityFields("MP3File", "Content", "Description")
 
-	dbWorker.Signals.SchemaUpdated.Connect(qdb.Slot(schemaValidator.ValidationRequired))
-	dbWorker.Signals.Connected.Connect(qdb.Slot(schemaValidator.ValidationRequired))
-	leaderElectionWorker.AddAvailabilityCriteria(func() bool {
-		return dbWorker.IsConnected() && schemaValidator.IsValid()
-	})
+	storeWorker.Connected.Connect(leadershipWorker.OnStoreConnected)
+	storeWorker.Disconnected.Connect(leadershipWorker.OnStoreDisconnected)
 
-	dbWorker.Signals.Connected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseConnected))
-	dbWorker.Signals.Disconnected.Connect(qdb.Slot(leaderElectionWorker.OnDatabaseDisconnected))
+	leadershipWorker.BecameLeader().Connect(audioFileRequestHandler.OnBecameLeader)
+	leadershipWorker.LosingLeadership().Connect(audioFileRequestHandler.OnLostLeadership)
 
-	leaderElectionWorker.Signals.BecameLeader.Connect(qdb.Slot(audioFileRequestHandler.OnBecameLeader))
-	leaderElectionWorker.Signals.LosingLeadership.Connect(qdb.Slot(audioFileRequestHandler.OnLostLeadership))
+	leadershipWorker.BecameLeader().Connect(textToSpeechRequestHandler.OnBecameLeader)
+	leadershipWorker.LosingLeadership().Connect(textToSpeechRequestHandler.OnLostLeadership)
 
-	leaderElectionWorker.Signals.BecameLeader.Connect(qdb.Slot(textToSpeechRequestHandler.OnBecameLeader))
-	leaderElectionWorker.Signals.LosingLeadership.Connect(qdb.Slot(textToSpeechRequestHandler.OnLostLeadership))
+	audioFileRequestHandler.NewRequest.Connect(audioPlayerWorker.OnAddAudioFileToQueue)
+	textToSpeechRequestHandler.NewRequest.Connect(audioPlayerWorker.OnAddTtsToQueue)
+	bluetoothHeartbeatWorker.Heartbeat.Connect(audioPlayerWorker.OnAddTtsToQueue)
 
-	audioFileRequestHandler.Signals.NewRequest.Connect(qdb.SlotWithArgs(audioPlayerWorker.OnAddAudioFileToQueue))
-	textToSpeechRequestHandler.Signals.NewRequest.Connect(qdb.SlotWithArgs(audioPlayerWorker.OnAddTtsToQueue))
-	bluetoothHeartbeatWorker.Signals.Heartbeat.Connect(qdb.SlotWithArgs(audioPlayerWorker.OnAddTtsToQueue))
-
-	// Create a new application configuration
-	config := qdb.ApplicationConfig{
-		Name: "audio-player",
-		Workers: []qdb.IWorker{
-			dbWorker,
-			leaderElectionWorker,
-			audioPlayerWorker,
-			audioFileRequestHandler,
-			textToSpeechRequestHandler,
-			bluetoothHeartbeatWorker,
-		},
-	}
-
-	// Create a new application
-	app := qdb.NewApplication(config)
-
-	// Execute the application
-	app.Execute()
+	a := app.NewApplication("audioplayer")
+	a.AddWorker(storeWorker)
+	a.AddWorker(leadershipWorker)
+	a.AddWorker(audioPlayerWorker)
+	a.AddWorker(audioFileRequestHandler)
+	a.AddWorker(textToSpeechRequestHandler)
+	a.AddWorker(bluetoothHeartbeatWorker)
+	a.Execute()
 }

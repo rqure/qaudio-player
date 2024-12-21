@@ -1,106 +1,84 @@
 package main
 
 import (
-	qdb "github.com/rqure/qdb/src"
+	"context"
+
+	"github.com/rqure/qlib/pkg/app"
+	"github.com/rqure/qlib/pkg/data"
+	"github.com/rqure/qlib/pkg/data/notification"
+	"github.com/rqure/qlib/pkg/log"
+	"github.com/rqure/qlib/pkg/signalslots"
 )
 
-type AudioFileRequestHandlerSignals struct {
-	NewRequest qdb.Signal
-}
-
 type AudioFileRequestHandler struct {
-	db                 qdb.IDatabase
+	store              data.Store
 	isLeader           bool
-	notificationTokens []qdb.INotificationToken
+	notificationTokens []data.NotificationToken
 
-	Signals AudioFileRequestHandlerSignals
+	NewRequest signalslots.Signal
 }
 
-func NewAudioFileRequestHandler(db qdb.IDatabase) *AudioFileRequestHandler {
+func NewAudioFileRequestHandler(store data.Store) *AudioFileRequestHandler {
 	return &AudioFileRequestHandler{
-		db: db,
+		store: store,
 	}
 }
 
-func (w *AudioFileRequestHandler) OnBecameLeader() {
+func (w *AudioFileRequestHandler) OnBecameLeader(ctx context.Context) {
 	w.isLeader = true
 
-	w.notificationTokens = append(w.notificationTokens, w.db.Notify(&qdb.DatabaseNotificationConfig{
-		Type:  "AudioController",
-		Field: "AudioFile",
-		ContextFields: []string{
-			"AudioFile->Description",
-			"AudioFile->Content",
-		},
-	}, qdb.NewNotificationCallback(w.ProcessNotification)))
+	w.notificationTokens = append(w.notificationTokens, w.store.Notify(
+		ctx,
+		notification.NewConfig().
+			SetEntityType("AudioController").
+			SetFieldName("AudioFile").
+			SetContextFields([]string{
+				"AudioFile->Description",
+				"AudioFile->Content",
+			},
+			),
+		notification.NewCallback(w.ProcessNotification),
+	))
 }
 
-func (w *AudioFileRequestHandler) OnLostLeadership() {
+func (w *AudioFileRequestHandler) OnLostLeadership(ctx context.Context) {
 	w.isLeader = false
 
 	for _, token := range w.notificationTokens {
-		token.Unbind()
+		token.Unbind(ctx)
 	}
 
-	w.notificationTokens = []qdb.INotificationToken{}
+	w.notificationTokens = []data.NotificationToken{}
 }
 
-func (w *AudioFileRequestHandler) Init() {
-
-}
-
-func (w *AudioFileRequestHandler) Deinit() {
+func (w *AudioFileRequestHandler) Init(context.Context, app.Handle) {
 
 }
 
-func (w *AudioFileRequestHandler) DoWork() {
+func (w *AudioFileRequestHandler) Deinit(context.Context) {
 
 }
 
-func (w *AudioFileRequestHandler) ProcessNotification(notification *qdb.DatabaseNotification) {
+func (w *AudioFileRequestHandler) DoWork(context.Context) {
+
+}
+
+func (w *AudioFileRequestHandler) ProcessNotification(ctx context.Context, n data.Notification) {
 	if !w.isLeader {
 		return
 	}
 
-	qdb.Info("[AudioFileRequestHandler::ProcessNotification] Received audio file request: %v", notification)
+	log.Info("Received audio file request: %v", n)
 
-	if len(notification.Context) == 0 {
-		w.Signals.NewRequest.Emit("")
+	if n.GetContextCount() < 2 {
+		w.NewRequest.Emit(ctx, "")
 		return
 	}
 
-	for _, c := range notification.Context {
-		switch c.Name {
-		case "AudioFile->Description":
-			descriptionField, err := c.Value.UnmarshalNew()
-			if err != nil {
-				qdb.Error("[AudioFileRequestHandler::ProcessNotification] Failed to unmarshal audio file description: %s", err)
-				return
-			}
+	description := n.GetContext(0).GetValue().GetString()
+	content := n.GetContext(1).GetValue().GetBinaryFile()
 
-			switch description := descriptionField.(type) {
-			case *qdb.String:
-				qdb.Info("[AudioFileRequestHandler::ProcessNotification] Adding request to play audio file: %s", description.Raw)
-			default:
-				qdb.Error("[AudioFileRequestHandler::ProcessNotification] Unknown audio file description type: %T", descriptionField)
-				return
-			}
-		case "AudioFile->Content":
-			fileContent, err := c.Value.UnmarshalNew()
-			if err != nil {
-				qdb.Error("[AudioFileRequestHandler::ProcessNotification] Failed to unmarshal audio file content: %s", err)
-				return
-			}
+	log.Info("Adding request play audio file: %s", description)
 
-			switch content := fileContent.(type) {
-			case *qdb.BinaryFile:
-				w.Signals.NewRequest.Emit(content.Raw)
-			default:
-				qdb.Error("[AudioFileRequestHandler::ProcessNotification] Unknown audio file content type: %T", fileContent)
-				return
-			}
-		default:
-			qdb.Error("[AudioFileRequestHandler::ProcessNotification] Unknown context field: %s", c.Name)
-		}
-	}
+	w.NewRequest.Emit(ctx, content)
 }

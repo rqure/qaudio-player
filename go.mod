@@ -1,10 +1,10 @@
 module github.com/rqure/qaudio-player
 
-go 1.22
+go 1.22.7
 
 require (
 	github.com/gammazero/deque v1.0.0
-	github.com/rqure/qdb v1.2.87
+	github.com/rqure/qlib v0.0.26
 	github.com/rqure/qtts v1.0.3
 )
 

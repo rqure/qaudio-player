@@ -1,21 +1,21 @@
 package main
 
 import (
+	"context"
 	"time"
 
-	qdb "github.com/rqure/qdb/src"
+	"github.com/rqure/qlib/pkg/app"
+	"github.com/rqure/qlib/pkg/log"
+	"github.com/rqure/qlib/pkg/signalslots"
 )
-
-type BluetoothHeartbeatWorkerSignals struct {
-	Heartbeat qdb.Signal
-}
 
 // Bluetooth Speakers normally sleep after a certain amount of time of inactivity.
 // This is a "hack" to keep it alive by playing a silent audio file.
 type BluetoothHeartbeatWorker struct {
 	lastHeartbeatTime time.Time
 	heartbeatInterval time.Duration
-	Signals           BluetoothHeartbeatWorkerSignals
+
+	Heartbeat signalslots.Signal
 }
 
 func NewBluetoothHeartbeatWorker(heartbeatInterval time.Duration) *BluetoothHeartbeatWorker {
@@ -24,19 +24,19 @@ func NewBluetoothHeartbeatWorker(heartbeatInterval time.Duration) *BluetoothHear
 	}
 }
 
-func (w *BluetoothHeartbeatWorker) Init() {
+func (w *BluetoothHeartbeatWorker) Init(context.Context, app.Handle) {
 }
 
-func (w *BluetoothHeartbeatWorker) Deinit() {
+func (w *BluetoothHeartbeatWorker) Deinit(context.Context) {
 }
 
-func (w *BluetoothHeartbeatWorker) DoWork() {
+func (w *BluetoothHeartbeatWorker) DoWork(context.Context) {
 	if time.Since(w.lastHeartbeatTime) > w.heartbeatInterval {
 		w.lastHeartbeatTime = time.Now()
 
 		// Play a silent audio file
-		qdb.Info("[BluetoothHeartbeatWorker::DoWork] Sending heartbeat")
+		log.Info("Sending heartbeat")
 		tts := " "
-		w.Signals.Heartbeat.Emit(tts)
+		w.Heartbeat.Emit(tts)
 	}
 }

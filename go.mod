@@ -4,7 +4,7 @@ go 1.22.7
 
 require (
 	github.com/gammazero/deque v1.0.0
-	github.com/rqure/qlib v0.0.31
+	github.com/rqure/qlib v0.0.32
 	github.com/rqure/qtts v1.0.3
 )
 

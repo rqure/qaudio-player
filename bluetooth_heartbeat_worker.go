@@ -7,6 +7,7 @@ import (
 	"github.com/rqure/qlib/pkg/app"
 	"github.com/rqure/qlib/pkg/log"
 	"github.com/rqure/qlib/pkg/signalslots"
+	"github.com/rqure/qlib/pkg/signalslots/signal"
 )
 
 // Bluetooth Speakers normally sleep after a certain amount of time of inactivity.
@@ -20,6 +21,7 @@ type BluetoothHeartbeatWorker struct {
 func NewBluetoothHeartbeatWorker(heartbeatInterval time.Duration) *BluetoothHeartbeatWorker {
 	return &BluetoothHeartbeatWorker{
 		heartbeatTicker: time.NewTicker(heartbeatInterval),
+		Heartbeat:       signal.New(),
 	}
 }
 

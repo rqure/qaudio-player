@@ -7,6 +7,7 @@ import (
 	"github.com/rqure/qlib/pkg/data"
 	"github.com/rqure/qlib/pkg/data/notification"
 	"github.com/rqure/qlib/pkg/signalslots"
+	"github.com/rqure/qlib/pkg/signalslots/signal"
 )
 
 type TextToSpeechRequestHandler struct {
@@ -19,7 +20,8 @@ type TextToSpeechRequestHandler struct {
 
 func NewTextToSpeechRequestHandler(store data.Store) *TextToSpeechRequestHandler {
 	return &TextToSpeechRequestHandler{
-		store: store,
+		store:      store,
+		NewRequest: signal.New(),
 	}
 }
 

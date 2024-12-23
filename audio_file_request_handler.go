@@ -8,6 +8,7 @@ import (
 	"github.com/rqure/qlib/pkg/data/notification"
 	"github.com/rqure/qlib/pkg/log"
 	"github.com/rqure/qlib/pkg/signalslots"
+	"github.com/rqure/qlib/pkg/signalslots/signal"
 )
 
 type AudioFileRequestHandler struct {
@@ -20,7 +21,8 @@ type AudioFileRequestHandler struct {
 
 func NewAudioFileRequestHandler(store data.Store) *AudioFileRequestHandler {
 	return &AudioFileRequestHandler{
-		store: store,
+		store:      store,
+		NewRequest: signal.New(),
 	}
 }
 

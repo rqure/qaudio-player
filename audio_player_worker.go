@@ -15,6 +15,7 @@ import (
 type ttsRequest struct {
 	text     string
 	language string
+	gender   string
 }
 
 type AudioPlayerWorker struct {
@@ -59,9 +60,15 @@ func (w *AudioPlayerWorker) DoWork(context.Context) {
 			language = req.language
 		}
 
+		gender := "male"
+		if req.gender != "" {
+			gender = req.gender
+		}
+
 		tts := &qtts.Speech{
 			Folder:   "/",
 			Language: language,
+			Voice:    gender,
 			Handler:  w.audioPlayer}
 
 		err := tts.Speak(req.text)
@@ -105,8 +112,10 @@ func (w *AudioPlayerWorker) OnAddAudioFileToQueue(ctx context.Context, args ...i
 func (w *AudioPlayerWorker) OnAddTtsToQueue(ctx context.Context, args ...interface{}) {
 	text := args[0].(string)
 	language := args[1].(string)
+	gender := args[2].(string)
 	w.ttsQueue.PushBack(ttsRequest{
 		text:     text,
 		language: language,
+		gender:   gender,
 	})
 }

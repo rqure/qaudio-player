@@ -32,7 +32,7 @@ func main() {
 	schemaValidator := leadershipWorker.GetEntityFieldValidator()
 
 	schemaValidator.RegisterEntityFields("Root", "SchemaUpdateTrigger")
-	schemaValidator.RegisterEntityFields("AudioController", "AudioFile", "TextToSpeech", "TtsLanguage")
+	schemaValidator.RegisterEntityFields("AudioController", "AudioFile", "TextToSpeech", "TTSLanguage")
 	schemaValidator.RegisterEntityFields("MP3File", "Content", "Description")
 
 	storeWorker.Connected.Connect(leadershipWorker.OnStoreConnected)
